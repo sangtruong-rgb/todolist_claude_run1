@@ -1,0 +1,44 @@
+{
+  "steps": {
+    "stack": {
+      "done": true,
+      "at": "2026-11-26",
+      "fingerprint": "e7eb5f7c404e4a74"
+    },
+    "product": {
+      "done": true,
+      "at": "2026-11-26",
+      "fingerprint": "7f2e4c12ce41e68d"
+    },
+    "design": {
+      "done": true,
+      "at": "2026-11-26",
+      "fingerprint": "f447b323b2f5e443"
+    },
+    "catalog": {
+      "done": true,
+      "at": "2026-11-26",
+      "fingerprint": "0e43cf4804ef2fb5"
+    },
+    "skills": {
+      "done": true,
+      "at": "2026-11-26",
+      "fingerprint": "e3b0c44298fc1c14"
+    },
+    "defaults": {
+      "done": true,
+      "at": "2026-11-26",
+      "fingerprint": "9f2d6cfa57eb5054"
+    },
+    "standards": {
+      "done": true,
+      "at": "2026-11-26",
+      "fingerprint": "7b3e9d9ceb2df655"
+    },
+    "check": {
+      "done": true,
+      "at": "2026-11-26",
+      "fingerprint": null
+    }
+  }
+}
