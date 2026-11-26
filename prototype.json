@@ -1,0 +1,42 @@
+{
+  "title": "Hạn chót và mức ưu tiên, xếp theo hạn rồi ưu tiên",
+  "binding": "look",
+  "drawnFrom": {
+    "commit": "b74af9dafd8d2a9b2413e6624ca36faabfdb1a3f",
+    "files": [],
+    "unbuilt": [
+      "trang danh sách việc từ #T1",
+      "nút Sửa/Xoá và chế độ sửa từ #T2",
+      "bộ lọc, số việc còn lại và nút xoá việc đã xong từ #T3"
+    ]
+  },
+  "screens": [
+    {
+      "id": "t4-list",
+      "title": "Hạn và ưu tiên",
+      "criteria": [
+        "C1",
+        "C3",
+        "C4",
+        "C5",
+        "C6",
+        "C8"
+      ],
+      "shows": "Ô ngày 'Hạn chót' và ô 'Ưu tiên: Trung bình' cạnh ô thêm; việc quá hạn đứng đầu với 'Quá hạn dd/mm', rồi 'Hôm nay' + 'Cao', các ngày sau, việc không hạn, rồi việc đã xong (nhãn mờ)"
+    },
+    {
+      "id": "t4-edit",
+      "title": "Sửa hạn và ưu tiên",
+      "criteria": [
+        "C2"
+      ],
+      "shows": "Chế độ sửa có 'Tên việc', 'Hạn chót', nút 'Bỏ hạn', 'Ưu tiên', 'Lưu', 'Huỷ'"
+    }
+  ],
+  "notShown": [
+    {
+      "criterion": "C7",
+      "why": "lưu qua lần tải lại trang; prototype chỉ giữ dữ liệu trong bộ nhớ"
+    }
+  ]
+}
