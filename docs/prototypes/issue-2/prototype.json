@@ -1,0 +1,58 @@
+{
+  "title": "Sửa và xoá việc, có Hoàn tác",
+  "binding": "look",
+  "drawnFrom": {
+    "commit": "b74af9dafd8d2a9b2413e6624ca36faabfdb1a3f",
+    "files": [],
+    "unbuilt": [
+      "trang danh sách việc (tiêu đề, ô thêm việc, dòng việc có ô tick) từ #1"
+    ]
+  },
+  "screens": [
+    {
+      "id": "t2-list",
+      "title": "Nút Sửa và Xoá",
+      "criteria": [
+        "C1",
+        "C12"
+      ],
+      "shows": "Mỗi dòng việc có nút 'Sửa' và 'Xoá' luôn hiện"
+    },
+    {
+      "id": "t2-edit",
+      "title": "Đang sửa",
+      "criteria": [
+        "C2",
+        "C3",
+        "C4"
+      ],
+      "shows": "Dòng 'Đặt lịch khám răng cho bé An' thành ô 'Tên việc' với nút 'Lưu' và 'Huỷ'"
+    },
+    {
+      "id": "t2-edit-invalid",
+      "title": "Lưu khi tên trống",
+      "criteria": [
+        "C5"
+      ],
+      "shows": "Ô 'Tên việc' trống, đánh dấu lỗi, dòng 'Hãy nhập tên việc.' ngay dưới"
+    },
+    {
+      "id": "t2-undo",
+      "title": "Vừa xoá",
+      "criteria": [
+        "C6",
+        "C7",
+        "C8",
+        "C9",
+        "C10"
+      ],
+      "shows": "Việc đã biến khỏi danh sách; thông báo 'Đã xoá “Nộp tiền điện tháng 11”' với nút 'Hoàn tác' ở cuối màn hình"
+    }
+  ],
+  "notShown": [
+    {
+      "criterion": "C11",
+      "why": "khi trình duyệt chặn lưu; dòng báo đó là màn hình #t1-storage của #1"
+    }
+  ]
+}
