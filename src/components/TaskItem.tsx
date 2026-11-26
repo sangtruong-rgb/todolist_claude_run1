@@ -1,6 +1,5 @@
 import './TaskItem.css'
-import { flushSync } from 'react-dom'
-import type { ChangeEvent, MouseEvent } from 'react'
+import type { MouseEvent } from 'react'
 import type { Task } from '../tasks/tasks'
 import TaskEditForm from './TaskEditForm'
 
@@ -28,13 +27,6 @@ function TaskItem({
   onCancel,
   onDelete,
 }: TaskItemProps) {
-  function handleChange(event: ChangeEvent<HTMLInputElement>) {
-    // The row moves to its new place in the list, and a moved node loses focus: put it back.
-    const box = event.currentTarget
-    flushSync(onToggle)
-    box.focus()
-  }
-
   function handleDelete(event: MouseEvent<HTMLButtonElement>) {
     // A click with detail 0 comes from Enter or Space, not from a mouse or a finger.
     onDelete(event.detail === 0)
@@ -57,7 +49,7 @@ function TaskItem({
           checked={task.done}
           data-task-id={task.id}
           aria-label={'Đã xong: ' + task.title}
-          onChange={handleChange}
+          onChange={onToggle}
         />
         <svg viewBox="0 0 22 22" aria-hidden="true" focusable="false">
           <path d="M6 11.5l3.5 3.5L16 8" pathLength={1} />

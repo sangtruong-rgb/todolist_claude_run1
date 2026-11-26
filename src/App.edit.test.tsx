@@ -66,8 +66,12 @@ describe('C1 row buttons', () => {
 
   it('has no row buttons on the empty page', () => {
     render(<App />)
-    expect(screen.getAllByRole('button')).toHaveLength(1)
-    expect(screen.getByRole('button', { name: 'Thêm' })).toBeInTheDocument()
+    expect(screen.getAllByRole('button').map((button) => button.textContent)).toEqual([
+      'Thêm',
+      'Tất cả',
+      'Chưa xong',
+      'Đã xong',
+    ])
   })
 })
 

@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { addTask, deleteTask, orderTasks, renameTask, restoreTask, toggleTask } from './tasks'
+import {
+  addTask,
+  clearDoneTasks,
+  deleteTask,
+  orderTasks,
+  renameTask,
+  restoreTask,
+  restoreTasks,
+  toggleTask,
+} from './tasks'
 import type { Task } from './tasks'
 
 function task(id: string, done: boolean): Task {
@@ -204,5 +213,97 @@ describe('restoreTask', () => {
     const rest = [task('a', false), task('c', false)]
     restoreTask(rest, { task: task('b', true), index: 1 })
     expect(rest).toEqual([task('a', false), task('c', false)])
+  })
+})
+
+describe('clearDoneTasks', () => {
+  it('removes every finished task and keeps the unfinished ones in order', () => {
+    const list = [task('a', true), task('b', false), task('c', true), task('d', false)]
+    const result = clearDoneTasks(list)
+    expect(result?.tasks).toEqual([task('b', false), task('d', false)])
+    expect(result?.deleted).toEqual([
+      { task: task('a', true), index: 0 },
+      { task: task('c', true), index: 2 },
+    ])
+  })
+
+  it('returns null when nothing is finished, also for an empty list', () => {
+    expect(clearDoneTasks([task('a', false), task('b', false)])).toBeNull()
+    expect(clearDoneTasks([])).toBeNull()
+  })
+
+  it('removes everything when all are finished', () => {
+    const list = [task('a', true), task('b', true)]
+    const result = clearDoneTasks(list)
+    expect(result?.tasks).toEqual([])
+    expect(result?.deleted).toEqual([
+      { task: task('a', true), index: 0 },
+      { task: task('b', true), index: 1 },
+    ])
+  })
+
+  it('does not change the list it is given', () => {
+    const list = [task('a', true), task('b', false)]
+    clearDoneTasks(list)
+    expect(list).toEqual([task('a', true), task('b', false)])
+  })
+})
+
+describe('restoreTasks', () => {
+  const patterns: [string, Task[]][] = [
+    ['finished first', [task('a', true), task('b', true), task('c', false), task('d', false)]],
+    ['finished last', [task('a', false), task('b', false), task('c', true), task('d', true)]],
+    ['adjacent', [task('a', false), task('b', true), task('c', true), task('d', false)]],
+    ['alternating', [task('a', true), task('b', false), task('c', true), task('d', false)]],
+    ['all finished', [task('a', true), task('b', true), task('c', true)]],
+  ]
+
+  it.each(patterns)('gives back the original list after a clear (%s)', (_, list) => {
+    const cleared = clearDoneTasks(list)!
+    expect(restoreTasks(cleared.tasks, cleared.deleted)).toEqual(list)
+  })
+
+  it('puts a task appended after the clear behind the restored ones', () => {
+    const cleared = clearDoneTasks([task('a', true), task('b', false), task('c', true)])!
+    const appended = [...cleared.tasks, task('d', false)]
+    expect(restoreTasks(appended, cleared.deleted).map((item) => item.id)).toEqual([
+      'a',
+      'b',
+      'c',
+      'd',
+    ])
+  })
+
+  it('gives the same result when deleted is in descending index order', () => {
+    const list = [task('a', true), task('b', false), task('c', true), task('d', false)]
+    const cleared = clearDoneTasks(list)!
+    expect(restoreTasks(cleared.tasks, [...cleared.deleted].reverse())).toEqual(list)
+  })
+
+  it('appends entries whose index is beyond the end, in ascending index order', () => {
+    const result = restoreTasks(
+      [task('a', false)],
+      [
+        { task: task('y', true), index: 9 },
+        { task: task('x', true), index: 5 },
+      ],
+    )
+    expect(result.map((item) => item.id)).toEqual(['a', 'x', 'y'])
+  })
+
+  it('returns an equal list for an empty deleted', () => {
+    const list = [task('a', false)]
+    expect(restoreTasks(list, [])).toEqual(list)
+  })
+
+  it('mutates neither argument', () => {
+    const list = [task('b', false)]
+    const deleted = [
+      { task: task('c', true), index: 1 },
+      { task: task('a', true), index: 0 },
+    ]
+    restoreTasks(list, deleted)
+    expect(list).toEqual([task('b', false)])
+    expect(deleted.map((entry) => entry.index)).toEqual([1, 0])
   })
 })

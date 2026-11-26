@@ -410,3 +410,200 @@ describe('useTasks, QA additions', () => {
     expect(titles(reloaded)).toEqual(['B'])
   })
 })
+
+function toggleByTitle(hook: Hook, title: string) {
+  const id = idOf(hook, title)
+  act(() => hook.result.current.toggleTask(id))
+}
+
+function savedTitles(): string[] {
+  const saved: unknown = JSON.parse(localStorage.getItem(TASKS_STORAGE_KEY) ?? '[]')
+  return (saved as { title: string }[]).map((task) => task.title)
+}
+
+function clearDone(hook: Hook) {
+  act(() => hook.result.current.clearDoneTasks())
+}
+
+function fourWithTwoDone(): Hook {
+  const hook = renderHook(() => useTasks())
+  addAll(hook, 'A', 'B', 'C', 'D')
+  toggleByTitle(hook, 'A')
+  toggleByTitle(hook, 'C')
+  return hook
+}
+
+describe('useTasks clear finished tasks (C7)', () => {
+  it('removes every finished task and remembers them in creation order', () => {
+    const hook = fourWithTwoDone()
+    clearDone(hook)
+    expect(titles(hook)).toEqual(['B', 'D'])
+    expect(hook.result.current.lastClearedDoneTasks).toEqual([
+      expect.objectContaining({ title: 'A', done: true }),
+      expect.objectContaining({ title: 'C', done: true }),
+    ])
+    expect(hook.result.current.lastDeletedTask).toBeNull()
+  })
+
+  it('stays removed after a reload, with nothing to undo', () => {
+    const hook = fourWithTwoDone()
+    clearDone(hook)
+    const reloaded = reload(hook)
+    expect(titles(reloaded)).toEqual(['B', 'D'])
+    expect(reloaded.result.current.lastClearedDoneTasks).toBeNull()
+    expect(reloaded.result.current.lastDeletedTask).toBeNull()
+    act(() => reloaded.result.current.undoDelete())
+    expect(titles(reloaded)).toEqual(['B', 'D'])
+  })
+
+  it('undo restores the list as it was, saved too', () => {
+    const hook = fourWithTwoDone()
+    const before = hook.result.current.tasks
+    clearDone(hook)
+    act(() => hook.result.current.undoDelete())
+    expect(hook.result.current.tasks).toEqual(before)
+    expect(hook.result.current.lastClearedDoneTasks).toBeNull()
+    expect(hook.result.current.lastDeletedTask).toBeNull()
+    expect(reload(hook).result.current.tasks).toEqual(before)
+  })
+
+  it('puts a task added after the clear behind the restored ones', () => {
+    const hook = fourWithTwoDone()
+    clearDone(hook)
+    add(hook, 'E')
+    act(() => hook.result.current.undoDelete())
+    expect(savedTitles()).toEqual(['A', 'B', 'C', 'D', 'E'])
+  })
+
+  it('a clear replaces a remembered single deletion', () => {
+    const hook = fourWithTwoDone()
+    deleteByTitle(hook, 'B')
+    clearDone(hook)
+    expect(hook.result.current.lastDeletedTask).toBeNull()
+    act(() => hook.result.current.undoDelete())
+    expect(savedTitles()).toEqual(['A', 'C', 'D'])
+    expect(titles(reload(hook))).toEqual(['D', 'A', 'C'])
+  })
+
+  it('a single deletion replaces a remembered clear', () => {
+    const hook = fourWithTwoDone()
+    clearDone(hook)
+    const target = hook.result.current.tasks[1]!
+    deleteByTitle(hook, 'D')
+    expect(hook.result.current.lastClearedDoneTasks).toBeNull()
+    expect(hook.result.current.lastDeletedTask).toEqual(target)
+    act(() => hook.result.current.undoDelete())
+    expect(savedTitles()).toEqual(['B', 'D'])
+  })
+
+  it('forgetting after a clear empties both fields and keeps the tasks', () => {
+    const hook = fourWithTwoDone()
+    clearDone(hook)
+    act(() => hook.result.current.forgetDeletedTask())
+    expect(hook.result.current.lastClearedDoneTasks).toBeNull()
+    expect(hook.result.current.lastDeletedTask).toBeNull()
+    act(() => hook.result.current.undoDelete())
+    expect(titles(hook)).toEqual(['B', 'D'])
+  })
+
+  it('with nothing finished changes nothing, saves nothing and keeps a remembered deletion', () => {
+    const hook = renderHook(() => useTasks())
+    addAll(hook, 'A', 'B')
+    const target = hook.result.current.tasks[0]!
+    deleteByTitle(hook, 'A')
+    refuseWrites()
+    clearDone(hook)
+    vi.restoreAllMocks()
+    expect(hook.result.current.storageBlocked).toBe(false)
+    expect(titles(hook)).toEqual(['B'])
+    expect(hook.result.current.lastDeletedTask).toEqual(target)
+    expect(hook.result.current.lastClearedDoneTasks).toBeNull()
+  })
+
+  it('add, toggle and rename keep the remembered clear', () => {
+    const hook = fourWithTwoDone()
+    clearDone(hook)
+    const remembered = hook.result.current.lastClearedDoneTasks
+    add(hook, 'E')
+    toggleByTitle(hook, 'B')
+    act(() => {
+      hook.result.current.renameTask(idOf(hook, 'D'), 'Đ')
+    })
+    expect(hook.result.current.lastClearedDoneTasks).toEqual(remembered)
+  })
+
+  it('a refused clear sets the block, still removes, and the next accepted save clears it', () => {
+    const hook = fourWithTwoDone()
+    refuseWrites()
+    clearDone(hook)
+    expect(hook.result.current.storageBlocked).toBe(true)
+    expect(titles(hook)).toEqual(['B', 'D'])
+    vi.restoreAllMocks()
+    add(hook, 'E')
+    expect(hook.result.current.storageBlocked).toBe(false)
+  })
+
+  it('a refused undo of a clear sets the block, still restores, and the next save clears it', () => {
+    const hook = fourWithTwoDone()
+    clearDone(hook)
+    refuseWrites()
+    act(() => hook.result.current.undoDelete())
+    expect(hook.result.current.storageBlocked).toBe(true)
+    expect(titles(hook)).toEqual(['B', 'D', 'A', 'C'])
+    vi.restoreAllMocks()
+    add(hook, 'E')
+    expect(hook.result.current.storageBlocked).toBe(false)
+  })
+})
+
+describe('useTasks clear finished tasks, QA additions', () => {
+  it('an unknown id deletion keeps a remembered clear and saves nothing', () => {
+    const hook = fourWithTwoDone()
+    clearDone(hook)
+    const remembered = hook.result.current.lastClearedDoneTasks
+    const setItem = vi.spyOn(Storage.prototype, 'setItem')
+    act(() => hook.result.current.deleteTask('no-such-id'))
+    expect(setItem).not.toHaveBeenCalled()
+    expect(hook.result.current.lastClearedDoneTasks).toEqual(remembered)
+    expect(hook.result.current.lastDeletedTask).toBeNull()
+  })
+
+  it('undo with nothing remembered changes nothing and makes no save attempt', () => {
+    const hook = renderHook(() => useTasks())
+    addAll(hook, 'A', 'B')
+    refuseWrites()
+    act(() => hook.result.current.undoDelete())
+    vi.restoreAllMocks()
+    expect(hook.result.current.storageBlocked).toBe(false)
+    expect(titles(hook)).toEqual(['A', 'B'])
+  })
+
+  it('clear and undo each save exactly once', () => {
+    const hook = fourWithTwoDone()
+    const setItem = vi.spyOn(Storage.prototype, 'setItem')
+    clearDone(hook)
+    expect(setItem).toHaveBeenCalledTimes(1)
+    act(() => hook.result.current.undoDelete())
+    expect(setItem).toHaveBeenCalledTimes(2)
+  })
+
+  it('a second clear replaces the first; undo brings back only the second', () => {
+    const hook = fourWithTwoDone()
+    clearDone(hook)
+    toggleByTitle(hook, 'D')
+    clearDone(hook)
+    expect(hook.result.current.lastClearedDoneTasks).toEqual([
+      expect.objectContaining({ title: 'D', done: true }),
+    ])
+    act(() => hook.result.current.undoDelete())
+    expect(savedTitles()).toEqual(['B', 'D'])
+  })
+
+  it('a clear with nothing finished keeps a remembered clear', () => {
+    const hook = fourWithTwoDone()
+    clearDone(hook)
+    const remembered = hook.result.current.lastClearedDoneTasks
+    clearDone(hook)
+    expect(hook.result.current.lastClearedDoneTasks).toEqual(remembered)
+  })
+})
