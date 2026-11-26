@@ -1,0 +1,113 @@
+.task-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 52px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.task-box {
+  position: relative;
+  flex: none;
+  width: 22px;
+  height: 22px;
+}
+
+/* The box stays 22x22; the invisible padding around it makes the click target larger. */
+.task-box input {
+  appearance: none;
+  display: block;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.task-box input::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+}
+
+.task-box input:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.task-box svg {
+  position: absolute;
+  inset: 0;
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: var(--on-accent);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.task-box path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+
+.task-box input:checked + svg path {
+  stroke-dashoffset: 0;
+}
+
+.task-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.is-done .task-title {
+  color: var(--done);
+  text-decoration: line-through;
+  text-decoration-color: var(--done);
+}
+
+.is-just-done .task-box path {
+  animation: draw-tick var(--motion) var(--ease);
+}
+
+.is-just-done .task-title {
+  animation: fade-title var(--motion) var(--ease);
+}
+
+@keyframes draw-tick {
+  from {
+    stroke-dashoffset: 1;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes fade-title {
+  from {
+    color: var(--ink);
+  }
+
+  to {
+    color: var(--done);
+  }
+}
+
+@media (max-width: 720px) {
+  .task-item {
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 0 6px;
+  }
+
+  .task-box {
+    margin-top: 1px;
+  }
+}
