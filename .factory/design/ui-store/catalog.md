@@ -10,3 +10,4 @@
 
 | Component | File | Props | Variants | Used in | Example |
 |---|---|---|---|---|---|
+| `UndoToast` | `src/components/UndoToast.tsx` | message, autoFocusUndo, onUndo, onExpire |  | 1 file(s) | `src/App.tsx` |
