@@ -1,4 +1,4 @@
-// The task rules: adding, toggling and the display order. Pure, no browser access.
+// The task rules: adding, renaming, toggling, deleting, restoring and the display order. Pure, no browser access.
 // A task list is always kept in creation order; the display order is derived from it.
 
 /** One item of the todo list. */
@@ -17,6 +17,32 @@ export function addTask(tasks: readonly Task[], title: string): Task[] | null {
 /** Flips the done state of the task with this id; an unknown id changes nothing. */
 export function toggleTask(tasks: readonly Task[], id: string): Task[] {
   return tasks.map((task) => (task.id === id ? { ...task, done: !task.done } : task))
+}
+
+/** A task taken out of the list and the index it had in the creation-order list. */
+export type DeletedTask = { task: Task; index: number }
+
+/** Gives the task a new trimmed title, or returns null when the title is blank; an unknown id changes nothing. */
+export function renameTask(tasks: readonly Task[], id: string, title: string): Task[] | null {
+  const trimmedTitle = title.trim()
+  if (trimmedTitle === '') return null
+  return tasks.map((task) => (task.id === id ? { ...task, title: trimmedTitle } : task))
+}
+
+/** Takes the task out of the list and remembers its place so it can be restored; null for an unknown id. */
+export function deleteTask(
+  tasks: readonly Task[],
+  id: string,
+): { tasks: Task[]; deleted: DeletedTask } | null {
+  const index = tasks.findIndex((task) => task.id === id)
+  const task = tasks[index]
+  if (task === undefined) return null
+  return { tasks: tasks.filter((_, position) => position !== index), deleted: { task, index } }
+}
+
+/** Puts a deleted task back at its old index in creation order, or at the end when the list is now shorter. */
+export function restoreTask(tasks: readonly Task[], deleted: DeletedTask): Task[] {
+  return [...tasks.slice(0, deleted.index), deleted.task, ...tasks.slice(deleted.index)]
 }
 
 /** Display order (C6): unfinished tasks above finished ones, each group in creation order. */

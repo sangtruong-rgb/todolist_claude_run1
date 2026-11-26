@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { addTask, orderTasks, toggleTask } from './tasks'
+import { addTask, deleteTask, orderTasks, renameTask, restoreTask, toggleTask } from './tasks'
 import type { Task } from './tasks'
 
 function task(id: string, done: boolean): Task {
@@ -108,5 +108,101 @@ describe('orderTasks (C6)', () => {
     const list = [task('1', true), task('2', false)]
     orderTasks(list)
     expect(ids(list)).toEqual(['1', '2'])
+  })
+})
+
+describe('renameTask', () => {
+  const list = [task('a', false), task('b', true), task('c', false)]
+
+  it('replaces the title with the trimmed one and keeps id, done and position of every task', () => {
+    expect(renameTask(list, 'b', '  Tên mới  ')).toEqual([
+      task('a', false),
+      { id: 'b', title: 'Tên mới', done: true },
+      task('c', false),
+    ])
+  })
+
+  it('keeps whitespace inside the title', () => {
+    expect(renameTask(list, 'a', ' Mua   sữa ')?.[0]?.title).toBe('Mua   sữa')
+  })
+
+  it('refuses a blank title', () => {
+    expect(renameTask(list, 'a', '')).toBeNull()
+    expect(renameTask(list, 'a', '   ')).toBeNull()
+    expect(renameTask(list, 'a', '\t\n ')).toBeNull()
+  })
+
+  it('leaves the list equal for an unknown id', () => {
+    expect(renameTask(list, 'zzz', 'Tên mới')).toEqual(list)
+  })
+
+  it('does not shorten a 250-character title', () => {
+    const long = 'x'.repeat(250)
+    expect(renameTask(list, 'a', long)?.[0]?.title).toBe(long)
+  })
+
+  it('does not change the list it is given', () => {
+    renameTask(list, 'a', 'Tên mới')
+    expect(list).toEqual([task('a', false), task('b', true), task('c', false)])
+  })
+})
+
+describe('deleteTask', () => {
+  const list = [task('a', false), task('b', true), task('c', false)]
+
+  it.each([
+    ['first', 'a', 0, ['b', 'c']],
+    ['middle', 'b', 1, ['a', 'c']],
+    ['last', 'c', 2, ['a', 'b']],
+  ])(
+    'removes the %s task, keeps the others in order and remembers its index',
+    (_, id, index, rest) => {
+      const result = deleteTask(list, id)
+      expect(result?.tasks.map((item) => item.id)).toEqual(rest)
+      expect(result?.deleted).toEqual({ task: list[index], index })
+    },
+  )
+
+  it('returns null for an unknown id', () => {
+    expect(deleteTask(list, 'zzz')).toBeNull()
+  })
+
+  it('does not change the list it is given', () => {
+    deleteTask(list, 'b')
+    expect(list).toEqual([task('a', false), task('b', true), task('c', false)])
+  })
+})
+
+describe('restoreTask', () => {
+  const list = [task('a', false), task('b', true), task('c', false)]
+
+  it.each(['a', 'b', 'c'])('gives back the original list after deleting %s', (id) => {
+    const result = deleteTask(list, id)
+    expect(result).not.toBeNull()
+    expect(restoreTask(result!.tasks, result!.deleted)).toEqual(list)
+  })
+
+  it('keeps a task appended after the deletion after the restored one', () => {
+    const result = deleteTask(list, 'b')!
+    const appended = [...result.tasks, task('d', false)]
+    expect(restoreTask(appended, result.deleted).map((item) => item.id)).toEqual([
+      'a',
+      'b',
+      'c',
+      'd',
+    ])
+  })
+
+  it('appends when the index is beyond the end', () => {
+    expect(restoreTask([task('a', false)], { task: task('z', true), index: 5 })).toEqual([
+      task('a', false),
+      task('z', true),
+    ])
+  })
+
+  it('does not change the list it is given', () => {
+    const rest = [task('a', false), task('c', false)]
+    restoreTask(rest, { task: task('b', true), index: 1 })
+    expect(rest).toEqual([task('a', false), task('c', false)])
   })
 })
