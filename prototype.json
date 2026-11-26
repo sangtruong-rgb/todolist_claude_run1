@@ -5,7 +5,7 @@
     "commit": "b74af9dafd8d2a9b2413e6624ca36faabfdb1a3f",
     "files": [],
     "unbuilt": [
-      "trang danh sách việc (tiêu đề, ô thêm việc, dòng việc có ô tick) từ #T1"
+      "trang danh sách việc (tiêu đề, ô thêm việc, dòng việc có ô tick) từ #1"
     ]
   },
   "screens": [
@@ -52,7 +52,7 @@
   "notShown": [
     {
       "criterion": "C11",
-      "why": "khi trình duyệt chặn lưu; dòng báo đó là màn hình #t1-storage của #T1"
+      "why": "khi trình duyệt chặn lưu; dòng báo đó là màn hình #t1-storage của #1"
     }
   ]
 }
