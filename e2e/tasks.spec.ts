@@ -22,7 +22,7 @@ async function addTask(page: Page, title: string) {
 }
 
 async function rowTitles(page: Page) {
-  return page.getByRole('listitem').allTextContents()
+  return page.getByRole('listitem').locator('.task-title').allTextContents()
 }
 
 async function refuseSaving(page: Page) {
@@ -191,7 +191,11 @@ async function recordMotion(page: Page) {
         event instanceof AnimationEvent
           ? getComputedStyle(target).animationDuration
           : getComputedStyle(target).transitionDuration
-      log.push({ row: target.closest('li')?.textContent ?? '', type: event.type, duration })
+      log.push({
+        row: target.closest('li')?.querySelector('.task-title')?.textContent ?? '',
+        type: event.type,
+        duration,
+      })
     }
     document.addEventListener('animationstart', record, true)
     document.addEventListener('transitionrun', record, true)

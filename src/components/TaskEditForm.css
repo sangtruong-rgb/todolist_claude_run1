@@ -1,0 +1,67 @@
+.edit-task {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.edit-task-label {
+  display: flex;
+  flex: 1 1 260px;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--muted);
+}
+
+.edit-task-field {
+  height: 44px;
+  padding: 0 12px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-bottom-color: var(--muted);
+  border-radius: var(--radius);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.edit-task-field[aria-invalid='true'] {
+  border-color: var(--accent);
+}
+
+.edit-task-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.edit-task-save,
+.edit-task-cancel {
+  height: 36px;
+  padding: 0 12px;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.edit-task-save {
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+}
+
+.edit-task-cancel {
+  background: transparent;
+  border: 1px solid var(--rule);
+  color: var(--ink);
+  font-weight: 400;
+}
+
+.edit-task-error {
+  flex: 0 0 100%;
+  margin: 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--accent-text);
+}

@@ -147,3 +147,266 @@ describe('useTasks, more C8 and C7 cases', () => {
     expect(titles(hook)).toEqual([long])
   })
 })
+
+type Hook = ReturnType<typeof renderHook<ReturnType<typeof useTasks>, unknown>>
+
+function addAll(hook: Hook, ...names: string[]) {
+  names.forEach((name) => add(hook, name))
+}
+
+function idOf(hook: Hook, title: string): string {
+  return hook.result.current.tasks.find((task) => task.title === title)!.id
+}
+
+function deleteByTitle(hook: Hook, title: string) {
+  const id = idOf(hook, title)
+  act(() => hook.result.current.deleteTask(id))
+}
+
+function reload(hook: Hook): Hook {
+  hook.unmount()
+  return renderHook(() => useTasks())
+}
+
+describe('useTasks rename (C3)', () => {
+  it('trims the title and keeps the done state and position of the task', () => {
+    const hook = renderHook(() => useTasks())
+    addAll(hook, 'A', 'B', 'C')
+    act(() => hook.result.current.toggleTask(idOf(hook, 'B')))
+    const before = hook.result.current.tasks
+    let renamed = false
+    act(() => {
+      renamed = hook.result.current.renameTask(idOf(hook, 'B'), '  Bờ mới ')
+    })
+    expect(renamed).toBe(true)
+    expect(hook.result.current.tasks).toEqual(
+      before.map((task) => (task.title === 'B' ? { ...task, title: 'Bờ mới' } : task)),
+    )
+    expect(hook.result.current.tasks[2]).toMatchObject({ title: 'Bờ mới', done: true })
+  })
+
+  it('refuses a blank title and changes nothing', () => {
+    const hook = renderHook(() => useTasks())
+    addAll(hook, 'A')
+    const before = hook.result.current.tasks
+    let renamed = true
+    act(() => {
+      renamed = hook.result.current.renameTask(before[0]!.id, '   ')
+    })
+    expect(renamed).toBe(false)
+    expect(hook.result.current.tasks).toEqual(before)
+  })
+
+  it('keeps the new title after a reload', () => {
+    const hook = renderHook(() => useTasks())
+    addAll(hook, 'A')
+    act(() => {
+      hook.result.current.renameTask(idOf(hook, 'A'), 'Mới')
+    })
+    expect(titles(reload(hook))).toEqual(['Mới'])
+  })
+})
+
+describe('useTasks delete and undo (C8)', () => {
+  it('removes the task and remembers it as the last deleted one', () => {
+    const hook = renderHook(() => useTasks())
+    addAll(hook, 'A', 'B')
+    const target = hook.result.current.tasks[0]!
+    deleteByTitle(hook, 'A')
+    expect(titles(hook)).toEqual(['B'])
+    expect(hook.result.current.lastDeletedTask).toEqual(target)
+  })
+
+  it('is gone after a reload when it was not restored, and nothing is left to undo', () => {
+    const hook = renderHook(() => useTasks())
+    addAll(hook, 'A', 'B')
+    deleteByTitle(hook, 'A')
+    const reloaded = reload(hook)
+    expect(titles(reloaded)).toEqual(['B'])
+    expect(reloaded.result.current.lastDeletedTask).toBeNull()
+  })
+
+  it('puts the middle one of three back at the same place, also after a reload', () => {
+    const hook = renderHook(() => useTasks())
+    addAll(hook, 'A', 'B', 'C')
+    const before = hook.result.current.tasks
+    deleteByTitle(hook, 'B')
+    act(() => hook.result.current.undoDelete())
+    expect(hook.result.current.tasks).toEqual(before)
+    expect(hook.result.current.lastDeletedTask).toBeNull()
+    expect(reload(hook).result.current.tasks).toEqual(before)
+  })
+
+  it('puts a finished task back with its done state in its old place', () => {
+    const hook = renderHook(() => useTasks())
+    addAll(hook, 'A', 'B', 'C')
+    act(() => hook.result.current.toggleTask(idOf(hook, 'A')))
+    const before = hook.result.current.tasks
+    deleteByTitle(hook, 'A')
+    expect(titles(hook)).toEqual(['B', 'C'])
+    act(() => hook.result.current.undoDelete())
+    expect(hook.result.current.tasks).toEqual(before)
+    expect(titles(hook)).toEqual(['B', 'C', 'A'])
+  })
+
+  it('puts a task added after the deletion behind the restored one', () => {
+    const hook = renderHook(() => useTasks())
+    addAll(hook, 'A', 'B', 'C')
+    deleteByTitle(hook, 'B')
+    add(hook, 'D')
+    act(() => hook.result.current.undoDelete())
+    expect(titles(hook)).toEqual(['A', 'B', 'C', 'D'])
+  })
+
+  it('forgets the deletion without changing the tasks, after which undo does nothing', () => {
+    const hook = renderHook(() => useTasks())
+    addAll(hook, 'A', 'B')
+    deleteByTitle(hook, 'A')
+    act(() => hook.result.current.forgetDeletedTask())
+    expect(hook.result.current.lastDeletedTask).toBeNull()
+    expect(titles(hook)).toEqual(['B'])
+    act(() => hook.result.current.undoDelete())
+    expect(titles(hook)).toEqual(['B'])
+    expect(titles(reload(hook))).toEqual(['B'])
+  })
+
+  it('keeps the last deleted task through add, toggle and rename', () => {
+    const hook = renderHook(() => useTasks())
+    addAll(hook, 'A', 'B')
+    const target = hook.result.current.tasks[0]!
+    deleteByTitle(hook, 'A')
+    add(hook, 'C')
+    act(() => hook.result.current.toggleTask(idOf(hook, 'B')))
+    act(() => {
+      hook.result.current.renameTask(idOf(hook, 'C'), 'Cờ')
+    })
+    expect(hook.result.current.lastDeletedTask).toEqual(target)
+  })
+
+  it('does nothing on undo with nothing deleted', () => {
+    const hook = renderHook(() => useTasks())
+    addAll(hook, 'A')
+    act(() => hook.result.current.undoDelete())
+    expect(titles(hook)).toEqual(['A'])
+    expect(hook.result.current.lastDeletedTask).toBeNull()
+  })
+
+  it('does nothing when deleting an unknown id', () => {
+    const hook = renderHook(() => useTasks())
+    addAll(hook, 'A')
+    act(() => hook.result.current.deleteTask('zzz'))
+    expect(titles(hook)).toEqual(['A'])
+    expect(hook.result.current.lastDeletedTask).toBeNull()
+  })
+})
+
+describe('useTasks second deletion (C9)', () => {
+  it('replaces the last deleted task, and undo brings back only the newer one', () => {
+    const hook = renderHook(() => useTasks())
+    addAll(hook, 'A', 'B', 'C')
+    const second = hook.result.current.tasks[1]!
+    deleteByTitle(hook, 'A')
+    deleteByTitle(hook, 'B')
+    expect(hook.result.current.lastDeletedTask).toEqual(second)
+    act(() => hook.result.current.undoDelete())
+    expect(titles(hook)).toEqual(['B', 'C'])
+    expect(hook.result.current.lastDeletedTask).toBeNull()
+    expect(titles(reload(hook))).toEqual(['B', 'C'])
+  })
+})
+
+describe('useTasks rename, delete and undo when the browser refuses to save (C11)', () => {
+  it('works in memory with writes refused from the start', () => {
+    refuseWrites()
+    const hook = renderHook(() => useTasks())
+    addAll(hook, 'A', 'B')
+    expect(hook.result.current.storageBlocked).toBe(true)
+    act(() => {
+      hook.result.current.renameTask(idOf(hook, 'A'), 'Á')
+    })
+    expect(titles(hook)).toEqual(['Á', 'B'])
+    deleteByTitle(hook, 'Á')
+    expect(titles(hook)).toEqual(['B'])
+    expect(hook.result.current.storageBlocked).toBe(true)
+    act(() => hook.result.current.undoDelete())
+    expect(titles(hook)).toEqual(['Á', 'B'])
+    expect(hook.result.current.storageBlocked).toBe(true)
+  })
+
+  it.each([
+    ['rename', (hook: Hook) => hook.result.current.renameTask(idOf(hook, 'A'), 'Á')],
+    ['delete', (hook: Hook) => hook.result.current.deleteTask(idOf(hook, 'A'))],
+  ])('a refused %s sets the block and the next accepted save clears it', (_, change) => {
+    const hook = renderHook(() => useTasks())
+    addAll(hook, 'A', 'B')
+    refuseWrites()
+    act(() => {
+      change(hook)
+    })
+    expect(hook.result.current.storageBlocked).toBe(true)
+    vi.restoreAllMocks()
+    add(hook, 'C')
+    expect(hook.result.current.storageBlocked).toBe(false)
+  })
+
+  it('a refused undo sets the block and the next accepted save clears it', () => {
+    const hook = renderHook(() => useTasks())
+    addAll(hook, 'A', 'B')
+    deleteByTitle(hook, 'A')
+    refuseWrites()
+    act(() => hook.result.current.undoDelete())
+    expect(hook.result.current.storageBlocked).toBe(true)
+    expect(titles(hook)).toEqual(['A', 'B'])
+    vi.restoreAllMocks()
+    add(hook, 'C')
+    expect(hook.result.current.storageBlocked).toBe(false)
+  })
+
+  it('a blank rename, forgetting and an empty undo make no save attempt', () => {
+    const hook = renderHook(() => useTasks())
+    addAll(hook, 'A', 'B')
+    deleteByTitle(hook, 'A')
+    refuseWrites()
+    act(() => {
+      hook.result.current.renameTask(idOf(hook, 'B'), '  ')
+    })
+    act(() => hook.result.current.forgetDeletedTask())
+    act(() => hook.result.current.undoDelete())
+    vi.restoreAllMocks()
+    expect(hook.result.current.storageBlocked).toBe(false)
+  })
+})
+
+describe('useTasks, QA additions', () => {
+  it('rename returns true and keeps the change in memory when the save is refused', () => {
+    const hook = renderHook(() => useTasks())
+    addAll(hook, 'A')
+    const id = idOf(hook, 'A')
+    refuseWrites()
+    let renamed = false
+    act(() => {
+      renamed = hook.result.current.renameTask(id, 'Á')
+    })
+    expect(renamed).toBe(true)
+    expect(titles(hook)).toEqual(['Á'])
+    expect(hook.result.current.storageBlocked).toBe(true)
+  })
+
+  it('deleting an unknown id makes no save attempt', () => {
+    const hook = renderHook(() => useTasks())
+    addAll(hook, 'A')
+    refuseWrites()
+    act(() => hook.result.current.deleteTask('zzz'))
+    vi.restoreAllMocks()
+    expect(hook.result.current.storageBlocked).toBe(false)
+  })
+
+  it('has nothing to undo after a reload, and the deleted task stays gone', () => {
+    const hook = renderHook(() => useTasks())
+    addAll(hook, 'A', 'B')
+    deleteByTitle(hook, 'A')
+    const reloaded = reload(hook)
+    act(() => reloaded.result.current.undoDelete())
+    expect(titles(reloaded)).toEqual(['B'])
+  })
+})

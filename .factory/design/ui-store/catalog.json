@@ -1,6 +1,22 @@
 {
   "libraries": [],
-  "components": [],
+  "components": [
+    {
+      "name": "UndoToast",
+      "file": "src/components/UndoToast.tsx",
+      "kind": "component",
+      "props": [
+        "message",
+        "autoFocusUndo",
+        "onUndo",
+        "onExpire"
+      ],
+      "variants": {},
+      "usedIn": 1,
+      "renders": 1,
+      "example": "src/App.tsx"
+    }
+  ],
   "duplicates": [],
   "patterns": {},
   "unused": [],

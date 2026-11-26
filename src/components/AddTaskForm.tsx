@@ -1,17 +1,19 @@
 import './AddTaskForm.css'
-import { useRef, useState } from 'react'
-import type { ChangeEvent, FormEvent, KeyboardEvent } from 'react'
+import { useState } from 'react'
+import type { ChangeEvent, FormEvent, KeyboardEvent, RefObject } from 'react'
 import { MAX_TASK_TITLE_LENGTH } from '../tasks/tasks'
 
-type AddTaskFormProps = { onAdd: (title: string) => boolean }
+type AddTaskFormProps = {
+  onAdd: (title: string) => boolean
+  fieldRef: RefObject<HTMLInputElement | null>
+}
 
 const ERROR_ID = 'new-task-error'
 
 /** Field and button that add a task; shows the empty-name error and keeps the cursor in the field. */
-function AddTaskForm({ onAdd }: AddTaskFormProps) {
+function AddTaskForm({ onAdd, fieldRef }: AddTaskFormProps) {
   const [text, setText] = useState('')
   const [showError, setShowError] = useState(false)
-  const fieldRef = useRef<HTMLInputElement>(null)
 
   function submit() {
     const added = onAdd(text)
