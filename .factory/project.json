@@ -1,0 +1,85 @@
+{
+  "stack": {
+    "languages": [
+      "typescript"
+    ],
+    "frameworks": [
+      "react"
+    ],
+    "packageManager": "npm",
+    "tests": [
+      "vitest",
+      "playwright"
+    ],
+    "linters": [
+      "oxlint",
+      "prettier"
+    ],
+    "ci": [
+      "github-actions"
+    ]
+  },
+  "commands": {
+    "install": "npm ci",
+    "format": "npm run format",
+    "lint": "npm run lint",
+    "typecheck": "npm run typecheck",
+    "test": "npm test",
+    "build": "npm run build",
+    "testFile": "npx vitest run {files}",
+    "e2e": "npm run e2e"
+  },
+  "run": {
+    "start": "npm start",
+    "port": 5173,
+    "url": "http://127.0.0.1:5173",
+    "readyPath": "/",
+    "env": ".env.example",
+    "notes": "Data lives in the browser localStorage of http://127.0.0.1:5173; use an isolated browser context so no real data is touched. To test a blocked storage: add an init script that makes Storage.prototype.setItem throw before the page loads."
+  },
+  "ui": true,
+  "browser": "playwright",
+  "skills": {
+    "planner": [],
+    "implementer": [
+      "vitest",
+      "playwright-best-practices"
+    ],
+    "qa": [
+      "vitest",
+      "playwright-best-practices"
+    ],
+    "reviewer": [],
+    "qc": []
+  },
+  "design": {
+    "doc": ".factory/design/DESIGN.md",
+    "tokens": "src/styles/tokens.css",
+    "uiStore": ".factory/design/ui-store",
+    "mockups": ".factory/design/mockups",
+    "sources": {
+      "figma": [],
+      "penpot": [],
+      "claudeDesign": []
+    },
+    "prototypes": "docs/prototypes"
+  },
+  "docs": {
+    "agents": "CLAUDE.md",
+    "product": ".factory/product.md",
+    "decisions": ".factory/decisions.md",
+    "adr": "docs/adr"
+  },
+  "standards": "CODING_STANDARDS.md",
+  "protectedPaths": [
+    ".github/**",
+    "CODING_STANDARDS.md",
+    ".factory/project.json"
+  ],
+  "escalate": [
+    "auth",
+    "money",
+    "migration",
+    "ci"
+  ]
+}
