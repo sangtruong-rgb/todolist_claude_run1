@@ -1,0 +1,67 @@
+{
+  "title": "Lọc, đếm việc còn lại, xoá hết việc đã xong",
+  "binding": "look",
+  "drawnFrom": {
+    "commit": "b74af9dafd8d2a9b2413e6624ca36faabfdb1a3f",
+    "files": [],
+    "unbuilt": [
+      "trang danh sách việc từ #T1",
+      "nút Sửa/Xoá và thông báo Hoàn tác từ #T2"
+    ]
+  },
+  "screens": [
+    {
+      "id": "t3-all",
+      "title": "Tất cả",
+      "criteria": [
+        "C1",
+        "C4",
+        "C6",
+        "C8"
+      ],
+      "shows": "Dòng '5 việc chưa xong', ba nút lọc với 'Tất cả' đang chọn, nút 'Xoá việc đã xong (2)' dưới danh sách"
+    },
+    {
+      "id": "t3-active",
+      "title": "Chưa xong",
+      "criteria": [
+        "C2",
+        "C3"
+      ],
+      "shows": "Chỉ năm việc chưa xong; 'Chưa xong' đang chọn"
+    },
+    {
+      "id": "t3-done",
+      "title": "Đã xong",
+      "criteria": [
+        "C2"
+      ],
+      "shows": "Chỉ hai việc đã xong; 'Đã xong' đang chọn"
+    },
+    {
+      "id": "t3-active-empty",
+      "title": "Không còn việc chưa xong",
+      "criteria": [
+        "C5"
+      ],
+      "shows": "'0 việc chưa xong' và dòng 'Không còn việc nào chưa xong.'"
+    },
+    {
+      "id": "t3-done-empty",
+      "title": "Chưa có việc xong",
+      "criteria": [
+        "C5"
+      ],
+      "shows": "Dòng 'Chưa có việc nào xong.' và không có nút xoá việc đã xong"
+    },
+    {
+      "id": "t3-cleared",
+      "title": "Vừa xoá việc đã xong",
+      "criteria": [
+        "C7"
+      ],
+      "shows": "Hai việc đã xong đã biến mất; thông báo 'Đã xoá 2 việc đã xong' với 'Hoàn tác'"
+    }
+  ],
+  "notShown": []
+}
