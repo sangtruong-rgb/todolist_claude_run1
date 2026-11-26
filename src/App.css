@@ -1,0 +1,58 @@
+.sheet {
+  position: relative;
+  width: 100%;
+  max-width: 840px;
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 40px 24px 96px 72px;
+}
+
+.sheet::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 52px;
+  width: 1px;
+  background: var(--margin);
+}
+
+.storage-warning {
+  margin: 16px 0 0;
+  padding: 10px 14px;
+  background: var(--paper-2);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--ink);
+}
+
+.empty-page {
+  padding: 28px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.empty-page p {
+  margin: 0;
+}
+
+.empty-page-title {
+  font: italic 20px/28px var(--serif);
+}
+
+.empty-page-hint {
+  margin-top: 4px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+@media (max-width: 720px) {
+  .sheet {
+    padding: 20px 16px 96px 40px;
+  }
+
+  .sheet::before {
+    left: 24px;
+  }
+}
