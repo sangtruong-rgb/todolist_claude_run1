@@ -1,0 +1,55 @@
+{
+  "title": "Thêm việc, đánh dấu xong, lưu trong trình duyệt",
+  "binding": "look",
+  "drawnFrom": {
+    "commit": "b74af9dafd8d2a9b2413e6624ca36faabfdb1a3f",
+    "files": [],
+    "unbuilt": []
+  },
+  "screens": [
+    {
+      "id": "t1-empty",
+      "title": "Lần đầu mở app",
+      "criteria": [
+        "C1",
+        "C10",
+        "C11"
+      ],
+      "shows": "Tiêu đề 'Việc của tôi', ô 'Thêm việc mới…', nút 'Thêm', và lời nhắc trang còn trống"
+    },
+    {
+      "id": "t1-list",
+      "title": "Có việc",
+      "criteria": [
+        "C2",
+        "C5",
+        "C6",
+        "C9"
+      ],
+      "shows": "Năm việc chưa xong theo thứ tự thêm, rồi hai việc đã xong có tick, gạch ngang, mờ; thêm hay tick thử được"
+    },
+    {
+      "id": "t1-invalid",
+      "title": "Thêm khi ô trống",
+      "criteria": [
+        "C3",
+        "C4"
+      ],
+      "shows": "Ô nhập đánh dấu lỗi với dòng 'Hãy nhập tên việc.' ngay dưới; ô nhận tối đa 200 ký tự"
+    },
+    {
+      "id": "t1-storage",
+      "title": "Không lưu được",
+      "criteria": [
+        "C8"
+      ],
+      "shows": "Dòng 'Trình duyệt đang chặn lưu dữ liệu. Việc bạn thêm sẽ mất khi đóng trang.' phía trên ô nhập"
+    }
+  ],
+  "notShown": [
+    {
+      "criterion": "C7",
+      "why": "lưu qua lần tải lại trang; prototype chỉ giữ dữ liệu trong bộ nhớ"
+    }
+  ]
+}
