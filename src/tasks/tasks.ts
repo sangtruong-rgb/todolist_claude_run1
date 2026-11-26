@@ -45,6 +45,22 @@ export function restoreTask(tasks: readonly Task[], deleted: DeletedTask): Task[
   return [...tasks.slice(0, deleted.index), deleted.task, ...tasks.slice(deleted.index)]
 }
 
+/** Takes every finished task out of the list and remembers their places; null when none is finished. */
+export function clearDoneTasks(
+  tasks: readonly Task[],
+): { tasks: Task[]; deleted: DeletedTask[] } | null {
+  const deleted = tasks.flatMap((task, index) => (task.done ? [{ task, index }] : []))
+  if (deleted.length === 0) return null
+  return { tasks: tasks.filter((task) => !task.done), deleted }
+}
+
+/** Puts every deleted task back, in ascending index order, each at its old index or at the end when the list is shorter. */
+export function restoreTasks(tasks: readonly Task[], deleted: readonly DeletedTask[]): Task[] {
+  return [...deleted]
+    .sort((first, second) => first.index - second.index)
+    .reduce<Task[]>((list, entry) => restoreTask(list, entry), [...tasks])
+}
+
 /** Display order (C6): unfinished tasks above finished ones, each group in creation order. */
 export function orderTasks(tasks: readonly Task[]): Task[] {
   return [...tasks.filter((task) => !task.done), ...tasks.filter((task) => task.done)]

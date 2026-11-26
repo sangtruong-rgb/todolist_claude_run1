@@ -42,8 +42,12 @@ describe('C1 first open', () => {
     expect(screen.queryAllByRole('listitem')).toHaveLength(0)
     expect(screen.queryByText(WARNING)).not.toBeInTheDocument()
     expect(screen.queryByText(ERROR)).not.toBeInTheDocument()
-    expect(screen.getAllByRole('button')).toHaveLength(1)
-    expect(screen.getByRole('button', { name: 'Thêm' })).toBeInTheDocument()
+    expect(screen.getAllByRole('button').map((button) => button.textContent)).toEqual([
+      'Thêm',
+      'Tất cả',
+      'Chưa xong',
+      'Đã xong',
+    ])
   })
 })
 
@@ -159,8 +163,7 @@ describe('C5 ticking', () => {
     const user = userEvent.setup()
     render(<App />)
     await addTasks(user, 'Việc')
-    await user.tab()
-    await user.tab()
+    for (let presses = 0; presses < 5; presses++) await user.tab()
     const box = screen.getByRole('checkbox', { name: 'Đã xong: Việc' })
     expect(box).toHaveFocus()
     await user.keyboard(' ')

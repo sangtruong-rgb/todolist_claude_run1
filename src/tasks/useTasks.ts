@@ -4,10 +4,11 @@ import { useState } from 'react'
 import { loadTasks, saveTasks } from './taskStorage'
 import {
   addTask as addTaskToList,
+  clearDoneTasks as clearDoneTasksFromList,
   deleteTask as deleteTaskFromList,
   orderTasks,
   renameTask as renameTaskInList,
-  restoreTask as restoreTaskToList,
+  restoreTasks as restoreTasksToList,
   toggleTask as toggleTaskInList,
 } from './tasks'
 import type { DeletedTask, Task } from './tasks'
@@ -19,18 +20,23 @@ export type TasksState = {
   toggleTask: (id: string) => void
   renameTask: (id: string, title: string) => boolean
   deleteTask: (id: string) => void
+  clearDoneTasks: () => void
   lastDeletedTask: Task | null
+  lastClearedDoneTasks: Task[] | null
   undoDelete: () => void
   forgetDeletedTask: () => void
 }
 
-/** Tasks in display order, with add, rename, toggle, delete and undo of the last delete that save the whole list each time. */
+// The one deletion that can still be undone: a single task, or every finished task cleared at once.
+type RememberedDeletion = { deleted: DeletedTask[]; clearedDone: boolean }
+
+/** Tasks in display order, with add, rename, toggle, delete, clear-finished and undo of the last deletion that save the whole list each time. */
 export function useTasks(): TasksState {
   const [initial] = useState(loadTasks)
   const [tasksInCreationOrder, setTasksInCreationOrder] = useState(initial.tasks)
   const [storageBlocked, setStorageBlocked] = useState(!initial.canSave)
 
-  const [lastDeletion, setLastDeletion] = useState<DeletedTask | null>(null)
+  const [lastDeletion, setLastDeletion] = useState<RememberedDeletion | null>(null)
 
   function replaceTasks(next: Task[]) {
     setTasksInCreationOrder(next)
@@ -59,12 +65,19 @@ export function useTasks(): TasksState {
     const result = deleteTaskFromList(tasksInCreationOrder, id)
     if (result === null) return
     replaceTasks(result.tasks)
-    setLastDeletion(result.deleted)
+    setLastDeletion({ deleted: [result.deleted], clearedDone: false })
+  }
+
+  function clearDoneTasks() {
+    const result = clearDoneTasksFromList(tasksInCreationOrder)
+    if (result === null) return
+    replaceTasks(result.tasks)
+    setLastDeletion({ deleted: result.deleted, clearedDone: true })
   }
 
   function undoDelete() {
     if (lastDeletion === null) return
-    replaceTasks(restoreTaskToList(tasksInCreationOrder, lastDeletion))
+    replaceTasks(restoreTasksToList(tasksInCreationOrder, lastDeletion.deleted))
     setLastDeletion(null)
   }
 
@@ -79,7 +92,12 @@ export function useTasks(): TasksState {
     toggleTask,
     renameTask,
     deleteTask,
-    lastDeletedTask: lastDeletion?.task ?? null,
+    clearDoneTasks,
+    lastDeletedTask:
+      lastDeletion && !lastDeletion.clearedDone ? lastDeletion.deleted[0]!.task : null,
+    lastClearedDoneTasks: lastDeletion?.clearedDone
+      ? lastDeletion.deleted.map((entry) => entry.task)
+      : null,
     undoDelete,
     forgetDeletedTask,
   }
